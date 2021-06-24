@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   runApp(MyApp());
@@ -41,7 +42,34 @@ class _TodoListPageState extends State<TodoListPage> {
   // 完了済みのタスク
   List<String> doneList = [];
   bool inputMode = false;
-  // ----
+
+  // Shared Preferenceに値を保存されているデータを読み込んでセットする。
+  _getPrefItems() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      todoList = prefs.getStringList('todoList') ?? [];
+      doneList = prefs.getStringList('doneList') ?? [];
+    });
+  }
+
+  // Shared Preferenceにデータを書き込む
+  _setPrefTodoList() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setStringList('todoList', todoList);
+  }
+
+  // Shared Preferenceにデータを書き込む
+  _setPrefDoneList() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setStringList('doneList', doneList);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _getPrefItems();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -77,6 +105,7 @@ class _TodoListPageState extends State<TodoListPage> {
             onSubmitted: (String value) {
               setState(() {
                 todoList.insert(0, value);
+                _setPrefTodoList();
                 inputMode = false;
               });
               textController.clear();
@@ -123,7 +152,9 @@ class _TodoListPageState extends State<TodoListPage> {
           onTap: () {
             setState(() {
               doneList.insert(0, todoList[todoIndex]);
+              _setPrefDoneList();
               todoList.remove(todoList[todoIndex]);
+              _setPrefTodoList();
             });
           },
           child: Icon(
@@ -135,6 +166,7 @@ class _TodoListPageState extends State<TodoListPage> {
           onTap: () {
             setState(() {
               todoList.remove(todoList[todoIndex]);
+              _setPrefTodoList();
             });
           },
           child: Icon(Icons.close),
@@ -152,7 +184,9 @@ class _TodoListPageState extends State<TodoListPage> {
           onTap: () {
             setState(() {
               todoList.insert(0, doneList[doneIndex]);
+              _setPrefTodoList();
               doneList.remove(doneList[doneIndex]);
+              _setPrefDoneList();
             });
           },
           child: Icon(
@@ -164,6 +198,7 @@ class _TodoListPageState extends State<TodoListPage> {
           onTap: () {
             setState(() {
               doneList.remove(doneList[doneIndex]);
+              _setPrefDoneList();
             });
           },
           child: Icon(Icons.close),
